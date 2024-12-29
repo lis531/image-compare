@@ -1,29 +1,9 @@
 # image-compare
 
-This template should help get you started developing with Vue 3 in Vite.
+A simple image comparison tool built with Vue 3 and Vite.
 
-## Recommended IDE Setup
+## Features
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+- Drag and drop images to compare
+- Slide the divider to compare images
+- Adjust the opacity of the images

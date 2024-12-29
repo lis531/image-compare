@@ -34,35 +34,42 @@ let changeFade = false;
 const handleSwitch = (e) => {
   changeFade = e.target.checked;
   if(!changeFade) {
-    const img1 = document.querySelector('.left img');
-    const img2 = document.querySelector('.right img');
-    img1.style.opacity = 1;
-    img2.style.opacity = 1;
+    const img = document.querySelector('.left img');
+    img.style.opacity = 1;
   } else {
-    const img1 = document.querySelector('.left img');
-    const img2 = document.querySelector('.right img');
+    const img = document.querySelector('.left img');
     const value = document.querySelector('#opacity').value;
-    img1.style.opacity = value / 100;
-    img2.style.opacity = 1 - value / 100;
+    img.style.opacity = value / 100;
   }
 };
 
 const handleFade = (e) => {
   if(!changeFade) return;
   const value = e.target.value;
-  const img1 = document.querySelector('.left img');
-  const img2 = document.querySelector('.right img');
-  img1.style.opacity = value / 100;
-  img2.style.opacity = 1 - value / 100;
+  const img = document.querySelector('.left img');
+  img.style.opacity = value / 100;
 };
 
 import { onMounted } from 'vue';
 
 onMounted(() => {
   document.querySelectorAll('.left, .right').forEach((div) => {
+    div.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = div.classList.contains('left') ? handleImage1 : handleImage2;
+      input.click();
+    });
+
     div.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      div.classList.add('drag-over');
+    });
+
+    div.addEventListener('dragleave', (e) => {
+      div.classList.remove('drag-over');
     });
 
     div.addEventListener('drop', (e) => {
@@ -75,8 +82,8 @@ onMounted(() => {
         img.src = image1.value;
         img.onload = () => {
           const comparator = document.querySelector('.comparator');
-          comparator.style.aspectRatio = `${img.width / img.height}`;
-          comparator.style.width = 'auto';
+          comparator.style.setProperty('--aspect-ratio', `${img.width / img.height}`);
+          comparator.style.setProperty('--width', 'auto');
         };
       } else {
         image2.value = URL.createObjectURL(file);
@@ -98,19 +105,27 @@ onMounted(() => {
     <div class="opacityControls">
       <label v-if="image1 && image2">Opacity?</label>
       <input v-if="image1 && image2" type="checkbox" @change="handleSwitch" />
-      <input id="opacity" v-if="image1 && image2" type="range" min="0" max="100" @input="handleFade" />
+      <input v-if="image1 && image2" id="opacity" type="range" min="0" max="100" @input="handleFade" />
     </div>
-    <div class="comparator">
+    <div class="comparator" v-bind:style="{'width': image1 && image2 ? 'auto' : '100%', 'aspect-ratio': image1 && image2 ? 'var(--aspect-ratio)' : 'unset'}">
       <input v-if="image1 && image2" type="range" min="0" max="100" @input="handleRange" />
       <div class="comparatorMain">
-        <div class="left">
-          <img v-if="image1" :src="image1" alt="Image 1" />
-          <div v-if="image1" class="borderImg"></div>
-          <input v-if="!image1" type="file" accept="image/*" @change="handleImage1" />
+        <div class="left" v-bind:style="{'border-width': image1 && image2 ? '0' : '4px'}">
+          <img v-if="image1" :src="image1" v-bind:class="{'comparableFormat': image1 && image2}" alt="Image 1" />
+          <div v-if="image1 && image2" class="borderImg"></div>
+          <div v-if="!image1">
+            <img class="icon" src="/public/icons/file.svg" alt="File" />
+            <b>Drop image here</b>
+            <p>or click to browse</p>
+          </div>
         </div>
-        <div class="right">
-          <img v-if="image2" :src="image2" alt="Image 2" />
-          <input v-if="!image2" type="file" accept="image/*" @change="handleImage2" />
+        <div class="right" v-bind:style="{'border-width': image1 && image2 ? '0' : '4px'}">
+          <img v-if="image2" :src="image2" v-bind:class="{'comparableFormat': image1 && image2}" alt="Image 2" />
+          <div v-if="!image2">
+            <img class="icon" src="/public/icons/file.svg" alt="File" />
+            <b>Drop image here</b>
+            <p>or click to browse</p>
+          </div>
         </div>
       </div>
     </div>
@@ -171,7 +186,7 @@ main {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background-image: url("public/arrows.svg");
+  background-image: url("../public/icons/arrows.svg");
   background-color: rgba(28, 28, 28, 0.5);
   background-size: 100%;
   border: 2px solid rgba(20, 20, 20, 0.5);
@@ -191,24 +206,64 @@ main {
   align-items: center;
   width: 50%;
   height: 100%;
+  margin: 1rem;
 }
 
-.comparator img {
-  position: absolute;
+.comparatorMain > div > img {
   width: 100%;
   height: 100%;
   -webkit-user-drag: none;
+  object-fit: contain;
+  padding: 1rem;
 }
 
-.left img {
+.comparableFormat {
+  position: absolute;
+  padding: 0 !important;
+  object-fit: unset !important;
+}
+
+.icon {
+  width: 5rem !important;
+  height: 5rem !important;
+}
+
+.left, .right {
+  transition: border 0.3s;
+  border-radius: 1rem;
+  border: 4px dashed rgba(115, 115, 115, 0.5);
+  cursor: pointer;
+}
+
+.drag-over {
+  border: 4px dashed rgba(55, 55, 55, 0.5);
+}
+
+.left > div, .right > div {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.left > div > b, .right > div > b {
+  font-size: large;
+}
+
+.left > div > p, .right > div > p {
+  font-size: small;
+}
+
+.left > img.comparableFormat {
   z-index: 10;
   left: 0;
   clip-path: inset(0 50% 0 0);
 }
 
-.right img {
+.right > img.comparableFormat {
   right: 0;
-  clip-path: inset(0 0 0 50%);
+  clip-path: inset(0 0 0 -50%);
 }
 
 .borderImg {
