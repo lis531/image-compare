@@ -6,17 +6,12 @@ const image2 = ref('');
 
 const handleImage1 = (e) => {
   image1.value = URL.createObjectURL(e.target.files[0]);
-  const img = new Image();
-  img.src = image1.value;
-  img.onload = () => {
-    const comparator = document.querySelector('.comparator');
-    comparator.style.aspectRatio = `${img.width / img.height}`;
-    comparator.style.width = 'auto';
-  };
+  resizeComparator();
 };
 
 const handleImage2 = (e) => {
   image2.value = URL.createObjectURL(e.target.files[0]);
+  resizeComparator();
 }
 
 const handleRange = (e) => {
@@ -44,10 +39,29 @@ const handleSwitch = (e) => {
 };
 
 const handleFade = (e) => {
-  if(!changeFade) return;
+  if (!changeFade) return;
   const value = e.target.value;
   const img = document.querySelector('.left img');
   img.style.opacity = value / 100;
+};
+
+const resizeComparator = () => {
+  const img1 = new Image();
+  const img2 = new Image();
+  img1.src = image1.value;
+  img2.src = image2.value;
+
+  const comparator = document.querySelector('.comparator');
+
+  const onLoad = () => {
+    if (!img1.complete || !img2.complete) return;
+    const img = img1.width * img1.height > img2.width * img2.height ? img1 : img2;
+    comparator.style.setProperty('--aspect-ratio', `${img.width} / ${img.height}`);
+    comparator.style.setProperty('--height', `${img.height}px`);
+  };
+
+  img1.onload = onLoad;
+  img2.onload = onLoad;
 };
 
 import { onMounted } from 'vue';
@@ -66,10 +80,14 @@ onMounted(() => {
       e.preventDefault();
       e.stopPropagation();
       div.classList.add('drag-over');
+      const input = document.querySelector('.comparator > input');
+      input.style.visibility = 'hidden';
     });
 
     div.addEventListener('dragleave', (e) => {
       div.classList.remove('drag-over');
+      const input = document.querySelector('.comparator > input');
+      input.style.visibility = 'visible';
     });
 
     div.addEventListener('drop', (e) => {
@@ -78,16 +96,12 @@ onMounted(() => {
       const file = e.dataTransfer.files[0];
       if (div.classList.contains('left')) {
         image1.value = URL.createObjectURL(file);
-        const img = new Image();
-        img.src = image1.value;
-        img.onload = () => {
-          const comparator = document.querySelector('.comparator');
-          comparator.style.setProperty('--aspect-ratio', `${img.width / img.height}`);
-          comparator.style.setProperty('--width', 'auto');
-        };
       } else {
         image2.value = URL.createObjectURL(file);
       }
+      resizeComparator();
+      const input = document.querySelector('.comparator > input');
+      input.style.visibility = 'visible';
     });
   });
 });
@@ -102,12 +116,14 @@ onMounted(() => {
     <div class="desc">
       <p>Upload two images to compare them.</p>
     </div>
-    <div class="opacityControls">
-      <label v-if="image1 && image2">Opacity?</label>
-      <input v-if="image1 && image2" type="checkbox" @change="handleSwitch" />
-      <input v-if="image1 && image2" id="opacity" type="range" min="0" max="100" @input="handleFade" />
+    <div v-if="image1 && image2" class="opacityControls">
+      <div>
+        <label>Opacity?</label>
+        <input type="checkbox" @change="handleSwitch" />
+      </div>
+      <input id="opacity" type="range" min="0" max="100" @input="handleFade" />
     </div>
-    <div class="comparator" v-bind:style="{'width': image1 && image2 ? 'auto' : '100%', 'aspect-ratio': image1 && image2 ? 'var(--aspect-ratio)' : 'unset'}">
+    <div class="comparator" v-bind:style="{'width': image1 && image2 ? 'auto' : '100%', 'height': image1 && image2 ? 'var(--height)' : '75vh', 'aspect-ratio': image1 && image2 ? 'var(--aspect-ratio)' : 'unset'}">
       <input v-if="image1 && image2" type="range" min="0" max="100" @input="handleRange" />
       <div class="comparatorMain">
         <div class="left" v-bind:style="{'border-width': image1 && image2 ? '0' : '4px'}">
@@ -135,7 +151,7 @@ onMounted(() => {
 <style scoped>
 header {
   line-height: 1.5;
-  margin: 3vh 0;
+  margin: 3vh 0 1vh;
   font-size: large;
 }
 
@@ -147,8 +163,12 @@ main {
   align-items: center;
 }
 
+p, label {
+  font-size: medium;
+}
+
 .desc {
-  margin-bottom: 2rem;
+  margin-bottom: 4vh;
   text-align: center;
 }
 
@@ -156,15 +176,81 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   margin-bottom: 2rem;
+}
+
+.opacityControls > input[type="range"] {
+  width: 400px;
+  height: 30px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.opacityControls > input[type="range"]::-webkit-slider-thumb {
+  height: 30px;
+  width: 30px;
+  background: none;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 var(--fill, 6px) #40c9ff inset;
+  border-image: linear-gradient(90deg, #40c9ff 50%, #ababab 0) 0 1/calc(50% - 6px/2) 100vw/0 calc(100vw + 8px);
+  -webkit-appearance: none;
+  appearance: none;
+  transition: box-shadow 0.3s;
+}
+
+.opacityControls > input[type="range"]::-moz-range-thumb {
+  height: 30px;
+  width: 30px;
+  background: none;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 var(--fill, 6px) #40c9ff inset;
+  border-image: linear-gradient(90deg, #40c9ff 50%, #ababab 0) 0 1/calc(50% - 6px/2) 100vw/0 calc(100vw + 8px);
+  -moz-appearance: none;
+  appearance: none;
+  transition: box-shadow 0.3s;
+}
+
+.opacityControls > input[type="range"]:active, .opacityControls > input[type="range"]:focus-visible {
+  --fill: 30px;
+}
+
+.opacityControls > div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.opacityControls > div > label {
+  margin-right: 1rem;
+}
+
+.opacityControls > div > input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: 2px solid #40c9ff;
+}
+
+.opacityControls > div > input[type="checkbox"]:checked {
+  background-image: url("/icons/check.svg");
+  background-color: #40c9ff;
+  background-position: center;
 }
 
 .comparator {
   display: flex;
   align-items: center;
   position: relative;
-  height: 75vh;
-  width: 100%;
+  max-height: 75vh;
   max-width: 100%;
   border-radius: 0.3rem;
   overflow: visible;
@@ -174,14 +260,28 @@ main {
   position: absolute;
   z-index: 100;
   width: calc(100% + 35px);
+  appearance: none;
   -webkit-appearance: none;
-  background: transparent;
+  background-color: transparent;
   left: -17.5px;
 }
 
 .comparator > input::-webkit-slider-thumb {
   cursor: ew-resize;
   -webkit-appearance: none;
+  appearance: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background-image: url("../public/icons/arrows.svg");
+  background-color: rgba(28, 28, 28, 0.5);
+  background-size: 100%;
+  border: 2px solid rgba(20, 20, 20, 0.5);
+}
+
+.comparator > input::-moz-range-thumb {
+  cursor: ew-resize;
+  -moz-appearance: none;
   appearance: none;
   width: 35px;
   height: 35px;
@@ -273,9 +373,5 @@ main {
   border-right: 2px solid rgba(28, 28, 28, 0.5);
   left: 0;
   z-index: 15;
-}
-
-.left > input, .right > input {
-  z-index: 1000;
 }
 </style>
