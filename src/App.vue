@@ -125,20 +125,20 @@ onMounted(() => {
     </div>
     <div class="comparator" v-bind:style="{'width': image1 && image2 ? 'auto' : '100%', 'height': image1 && image2 ? 'var(--height)' : '75vh', 'aspect-ratio': image1 && image2 ? 'var(--aspect-ratio)' : 'unset'}">
       <input v-if="image1 && image2" type="range" min="0" max="100" @input="handleRange" />
-      <div class="comparatorMain">
+      <div class="comparatorMain" v-bind:style="{'flex-direction': image1 && image2 ? 'row !important' : 'initial'}">
         <div class="left" v-bind:style="{'border-width': image1 && image2 ? '0' : '4px'}">
           <img v-if="image1" :src="image1" v-bind:class="{'comparableFormat': image1 && image2}" alt="Image 1" />
-          <div v-if="image1 && image2" class="borderImg"></div>
-          <div v-if="!image1">
-            <img class="icon" src="/public/icons/file.svg" alt="File" />
+          <div v-else>
+            <img class="icon" src="/src/icons/file.svg" alt="File" />
             <b>Drop image here</b>
             <p>or click to browse</p>
           </div>
+          <div v-if="image1 && image2" class="borderImg"></div>
         </div>
         <div class="right" v-bind:style="{'border-width': image1 && image2 ? '0' : '4px'}">
           <img v-if="image2" :src="image2" v-bind:class="{'comparableFormat': image1 && image2}" alt="Image 2" />
-          <div v-if="!image2">
-            <img class="icon" src="/public/icons/file.svg" alt="File" />
+          <div v-else>
+            <img class="icon" src="/src/icons/file.svg" alt="File" />
             <b>Drop image here</b>
             <p>or click to browse</p>
           </div>
@@ -241,7 +241,7 @@ p, label {
 }
 
 .opacityControls > div > input[type="checkbox"]:checked {
-  background-image: url("/icons/check.svg");
+  background-image: url("/src/icons/check.svg");
   background-color: #40c9ff;
   background-position: center;
 }
@@ -250,7 +250,7 @@ p, label {
   display: flex;
   align-items: center;
   position: relative;
-  max-height: 75vh;
+  max-height: 72vh;
   max-width: 100%;
   border-radius: 0.3rem;
   overflow: visible;
@@ -273,7 +273,7 @@ p, label {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background-image: url("../public/icons/arrows.svg");
+  background-image: url("icons/arrows.svg");
   background-color: rgba(28, 28, 28, 0.5);
   background-size: 100%;
   border: 2px solid rgba(20, 20, 20, 0.5);
@@ -286,7 +286,7 @@ p, label {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background-image: url("../public/icons/arrows.svg");
+  background-image: url("icons/arrows.svg");
   background-color: rgba(28, 28, 28, 0.5);
   background-size: 100%;
   border: 2px solid rgba(20, 20, 20, 0.5);
@@ -298,6 +298,9 @@ p, label {
   height: 100%;
   display: flex;
   align-items: center;
+  @media (max-width: 768px) {
+    flex-direction: column !important;
+  }
 }
 
 .comparatorMain > div {
@@ -307,6 +310,9 @@ p, label {
   width: 50%;
   height: 100%;
   margin: 1rem;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 }
 
 .comparatorMain > div > img {

@@ -52,7 +52,7 @@
 
 @font-face {
   font-family: 'FunnelRegular';
-  src: url('/fonts/FunnelRegular.ttf') format('truetype');
+  src: url('/fonts/FunnelRegular.woff2') format('truetype');
   font-display: swap;
 }
 
